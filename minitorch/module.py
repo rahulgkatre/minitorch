@@ -52,18 +52,22 @@ class Module:
             The name and `Parameter` of each ancestor parameter.
         """
         # Implement for Task 0.4.
-        all_named_parameters = list(self._parameters.items())
-        for module in self.modules():
-            all_named_parameters.extend(module.named_parameters())
-        return all_named_parameters
+        named_params = list(self._parameters.items())
+        submodule_named_params = [
+            (f"{m_name}.{p_name}", param) \
+            for m_name, module in self._modules.items() \
+            for p_name, param in module.named_parameters()
+        ]
+        named_params.extend(submodule_named_params)
+        return named_params
 
     def parameters(self) -> Sequence[Parameter]:
         "Enumerate over all the parameters of this module and its descendents."
         # Implement for Task 0.4.
-        all_parameters = list(self._parameters.values())
+        params = list(self._parameters.values())
         for module in self.modules():
-            all_parameters.extend(module.parameters())
-        return all_parameters
+            params.extend(module.parameters())
+        return params
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """

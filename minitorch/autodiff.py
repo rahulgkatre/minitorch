@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Any, Iterable, List, Tuple
 
 from typing_extensions import Protocol
-
+from collections import deque, defaultdict
 # ## Task 1.1
 # Central Difference calculation
 
@@ -22,9 +22,9 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
     Returns:
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
-    # TODO: Implement for Task 1.1.
-    raise NotImplementedError('Need to implement for Task 1.1')
-
+    # Implement for Task 1.1.
+    h = epsilon / 2
+    return (f(*vals[:arg], vals[arg] + h, *vals[arg+1:]) - f(*vals[:arg], vals[arg] - h, *vals[arg+1:])) / epsilon
 
 variable_count = 1
 
@@ -61,9 +61,57 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
-
+    # Implement for Task 1.4.
+    def recursive_topological_sort(v=variable, ordering=deque(), visited=set()):
+        visited.add(v.unique_id)
+        for p in v.parents:
+            if p.unique_id not in visited:
+                topological_sort_fn(p, ordering, visited)
+        ordering.appendleft(v)
+        return ordering
+    
+    def iterative_topological_sort(start=variable):    
+        stack = deque([start])
+        onstack = set()
+        visited = set()
+        ordering = deque()
+        while stack:
+            v = stack[-1]
+            if v.unique_id not in visited:                
+                visited.add(v.unique_id)
+                for p in v.parents:
+                    if p.unique_id not in visited and p.unique_id not in onstack:
+                        stack.append(p)
+                        onstack.add(p.unique_id)
+            else:
+                stack.pop()
+                ordering.appendleft(v)
+        return ordering
+    
+    def kahn_toplogical_sort(start=variable):
+        visited = set()
+        indegree = defaultdict(int)
+        indegree[start.unique_id] = 0
+        queue = deque([start])
+        while queue:
+            v = queue.pop()
+            if v.unique_id not in visited:
+                visited.add(v.unique_id)
+                for p in v.parents:
+                    indegree[p.unique_id] += 1
+                    queue.append(p)
+        ordering = []
+        queue = deque([start])
+        while queue:
+            v = queue.popleft()
+            ordering.append(v)
+            for p in v.parents:
+                indegree[p.unique_id] -= 1
+                if indegree[p.unique_id] == 0:
+                    queue.append(p)
+        return ordering
+    
+    return iterative_topological_sort()       
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
     """
@@ -76,8 +124,17 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    # TODO: Implement for Task 1.4.
-    raise NotImplementedError('Need to implement for Task 1.4')
+    # Implement for Task 1.4.
+    derivs = defaultdict(int)
+    derivs[variable.unique_id] = deriv
+    for v in topological_sort(variable):
+        d_output = derivs[v.unique_id]
+        if v.is_leaf():
+            v.accumulate_derivative(d_output)
+        elif not v.is_constant():
+            for input_var, local_deriv in v.chain_rule(d_output):
+                derivs[input_var.unique_id] += local_deriv
+    return
 
 
 @dataclass

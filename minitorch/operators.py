@@ -31,7 +31,7 @@ def add(x: float, y: float) -> float:
 def neg(x: float) -> float:
     "$f(x) = -x$"
     # Implement for Task 0.1.
-    return -x
+    return -1.0 * x
 
 
 def lt(x: float, y: float) -> float:
@@ -71,7 +71,7 @@ def sigmoid(x: float) -> float:
     for stability.
     """
     # Implement for Task 0.1.
-    return 1.0 / (1.0 + math.exp(-x)) if x >= 0 else math.exp(x) / (1.0 + math.exp(x))
+    return 1.0 / (1.0 + math.exp(-x)) if x >= 0.0 else math.exp(x) / (1.0 + math.exp(x))
 
 
 def relu(x: float) -> float:
@@ -81,7 +81,7 @@ def relu(x: float) -> float:
     (See https://en.wikipedia.org/wiki/Rectifier_(neural_networks) .)
     """
     # Implement for Task 0.1.
-    return x if x > 0 else 0
+    return x if x > 0.0 else 0.0
 
 
 EPS = 1e-6
@@ -100,25 +100,26 @@ def exp(x: float) -> float:
 def log_back(x: float, d: float) -> float:
     r"If $f = log$ as above, compute $d \times f'(x)$"
     # Implement for Task 0.1.
-    return d / (x + EPS)
+    return d / (x + EPS) if x == 0.0 else d / x
 
 
 def inv(x: float) -> float:
     "$f(x) = 1/x$"
     # Implement for Task 0.1.
-    return 1.0 / (x + EPS)
+    return 1.0 / (x + EPS) if x == 0.0 else 1.0 / x
 
 
 def inv_back(x: float, d: float) -> float:
     r"If $f(x) = 1/x$ compute $d \times f'(x)$"
     # Implement for Task 0.1.
-    return (-d / (x * x + EPS))
+    inv_x = 1.0 / (x + EPS) if x == 0.0 else 1.0 / x
+    return -d * inv_x * inv_x
 
 
 def relu_back(x: float, d: float) -> float:
     r"If $f = relu$ compute $d \times f'(x)$"
     # Implement for Task 0.1.
-    return d if x > 0 else 0
+    return d if x > 0.0 else 0.0
 
 
 # ## Task 0.3
@@ -172,7 +173,7 @@ def zipWith(
     def _zipWith_fn(ls1: Iterable[float], ls2: Iterable[float]) -> Iterable[float]:
         return [fn(x, y) for x, y in zip(ls1, ls2)]
 
-    return _zipWith_impl
+    return _zipWith_fn
 
 
 def addLists(ls1: Iterable[float], ls2: Iterable[float]) -> Iterable[float]:
