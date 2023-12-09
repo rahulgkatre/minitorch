@@ -66,24 +66,27 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
         visited.add(v.unique_id)
         for p in v.parents:
             if p.unique_id not in visited:
-                topological_sort_fn(p, ordering, visited)
+                recursive_topological_sort(p, ordering, visited)
         ordering.appendleft(v)
         return ordering
     
     def iterative_topological_sort(start=variable):    
+        status = defaultdict(int)
+        NEW = 0
+        ENQUEUED = 1
+        VISITED = 2
         stack = deque([start])
-        onstack = set()
-        visited = set()
+        status[start.unique_id] = ENQUEUED
         ordering = deque()
         while stack:
             v = stack[-1]
-            if v.unique_id not in visited:                
-                visited.add(v.unique_id)
+            if status[v.unique_id] == ENQUEUED:
+                status[v.unique_id] = VISITED
                 for p in v.parents:
-                    if p.unique_id not in visited and p.unique_id not in onstack:
+                    if status[p.unique_id] == NEW:
                         stack.append(p)
-                        onstack.add(p.unique_id)
-            else:
+                        status[p.unique_id] = ENQUEUED
+            elif status[v.unique_id] == VISITED:
                 stack.pop()
                 ordering.appendleft(v)
         return ordering
