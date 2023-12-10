@@ -82,8 +82,10 @@ class TensorBackend:
         self.eq_zip = ops.zip(operators.eq)
         self.is_close_zip = ops.zip(operators.is_close)
         self.relu_back_zip = ops.zip(operators.relu_back)
+        self.exp_back_zip = ops.zip(operators.exp_back)
         self.log_back_zip = ops.zip(operators.log_back)
         self.inv_back_zip = ops.zip(operators.inv_back)
+        self.sigmoid_back_zip = ops.zip(operators.sigmoid_back)
 
         # Reduce
         self.add_reduce = ops.reduce(operators.add, 0.0)
@@ -387,18 +389,18 @@ def tensor_reduce(
         a_size = operators.prod(a_shape)
         a_ndims = len(a_shape)
         a_index = [0] * a_ndims
-
+        
         broadcast_shape = shape_broadcast(out_shape, a_shape)
         for out_pos in range(out_size):
             to_index(out_pos, out_shape, out_index, out_strides)
+            a_index = out_index # Start from 0 in the reduce dim, this is the same index in both tensors
+            a_pos = index_to_position(a_index, a_strides)
             acc = start
-            a_index = out_index
-            for reduce_i in range(a_shape[reduce_dim]):
-                a_index[reduce_dim] = reduce_i
-                a_pos = index_to_position(a_index, a_strides)
+            for _ in range(a_shape[reduce_dim]):
                 acc = fn(a_storage[a_pos], acc)
+                a_pos += a_strides[reduce_dim] # Don't use index_to_position again, just move by stride
             out[out_pos] = acc
-        return
+
     return _reduce
 
 

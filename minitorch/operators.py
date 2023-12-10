@@ -3,7 +3,7 @@ Collection of the core mathematical operators used throughout the code base.
 """
 
 import math
-from typing import Callable, Iterable
+from typing import Callable, Iterable, Tuple, Sequence
 
 # ## Task 0.1
 #
@@ -16,10 +16,17 @@ def mul(x: float, y: float) -> float:
     return x * y
 
 
+def mul_back(x: float, y: float, d: float) -> Tuple[float, float]:
+    return d * y, d * x
+
+
 def id(x: float) -> float:
     "$f(x) = x$"
     # Implement for Task 0.1.
     return x
+
+
+id_back = id
 
 
 def add(x: float, y: float) -> float:
@@ -28,10 +35,25 @@ def add(x: float, y: float) -> float:
     return x + y
 
 
+def add_back(d: float) -> Tuple[float, float]:
+    return d, d
+
+
 def neg(x: float) -> float:
     "$f(x) = -x$"
     # Implement for Task 0.1.
     return -1.0 * x
+
+
+def neg_back(d: float) -> float:
+    return -1.0 * d
+
+
+def no_grad(num_inputs) -> float | Sequence[float]:
+    if num_inputs == 1:
+        return 0.0
+    else:
+        return tuple(0.0 for _ in range(num_inputs))
 
 
 def lt(x: float, y: float) -> float:
@@ -74,6 +96,11 @@ def sigmoid(x: float) -> float:
     return 1.0 / (1.0 + math.exp(-x)) if x >= 0.0 else math.exp(x) / (1.0 + math.exp(x))
 
 
+def sigmoid_back(x: float, d: float) -> float:
+    sigmoid_x = sigmoid(x)
+    return sigmoid_x * (1 - sigmoid_x) * d
+
+
 def relu(x: float) -> float:
     """
     $f(x) =$ x if x is greater than 0, else 0
@@ -84,6 +111,12 @@ def relu(x: float) -> float:
     return x if x > 0.0 else 0.0
 
 
+def relu_back(x: float, d: float) -> float:
+    r"If $f = relu$ compute $d \times f'(x)$"
+    # Implement for Task 0.1.
+    return d if x > 0.0 else 0.0
+
+
 EPS = 1e-6
 
 
@@ -92,15 +125,19 @@ def log(x: float) -> float:
     return math.log(x + EPS)
 
 
+def log_back(x: float, d: float) -> float:
+    r"If $f = log$ as above, compute $d \times f'(x)$"
+    # Implement for Task 0.1.
+    return d / (x + EPS) if x == 0.0 else d / x
+
+
 def exp(x: float) -> float:
     "$f(x) = e^{x}$"
     return math.exp(x)
 
 
-def log_back(x: float, d: float) -> float:
-    r"If $f = log$ as above, compute $d \times f'(x)$"
-    # Implement for Task 0.1.
-    return d / (x + EPS) if x == 0.0 else d / x
+def exp_back(x: float, d: float) -> float:
+    return exp(x) * d
 
 
 def inv(x: float) -> float:
@@ -115,11 +152,6 @@ def inv_back(x: float, d: float) -> float:
     inv_x = 1.0 / (x + EPS) if x == 0.0 else 1.0 / x
     return -d * inv_x * inv_x
 
-
-def relu_back(x: float, d: float) -> float:
-    r"If $f = relu$ compute $d \times f'(x)$"
-    # Implement for Task 0.1.
-    return d if x > 0.0 else 0.0
 
 
 # ## Task 0.3

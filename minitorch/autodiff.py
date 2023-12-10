@@ -64,9 +64,10 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     # Implement for Task 1.4.
     def recursive_topological_sort(v=variable, ordering=deque(), visited=set()):
         visited.add(v.unique_id)
-        for p in v.parents:
-            if p.unique_id not in visited:
-                recursive_topological_sort(p, ordering, visited)
+        if not v.is_constant():
+            for p in v.parents:
+                if p.unique_id not in visited:
+                    recursive_topological_sort(p, ordering, visited)
         ordering.appendleft(v)
         return ordering
     
@@ -82,10 +83,11 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
             v = stack[-1]
             if status[v.unique_id] == ENQUEUED:
                 status[v.unique_id] = VISITED
-                for p in v.parents:
-                    if status[p.unique_id] == NEW:
-                        stack.append(p)
-                        status[p.unique_id] = ENQUEUED
+                if not v.is_constant():
+                    for p in v.parents:
+                        if status[p.unique_id] == NEW:
+                            stack.append(p)
+                            status[p.unique_id] = ENQUEUED
             elif status[v.unique_id] == VISITED:
                 stack.pop()
                 ordering.appendleft(v)
@@ -100,9 +102,10 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
             v = queue.pop()
             if v.unique_id not in visited:
                 visited.add(v.unique_id)
-                for p in v.parents:
-                    indegree[p.unique_id] += 1
-                    queue.append(p)
+                if not v.is_constant():
+                    for p in v.parents:
+                        indegree[p.unique_id] += 1
+                        queue.append(p)
         ordering = []
         queue = deque([start])
         while queue:
