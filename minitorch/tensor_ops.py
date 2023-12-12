@@ -268,20 +268,13 @@ def tensor_map(
     ) -> None:
         # Implement for Task 2.3.
         out_size = operators.prod(out_shape)
-        out_ndims = len(out_shape)
-        out_index = [0] * out_ndims
-
-        in_size = operators.prod(in_shape)
-        in_ndims = len(in_shape)
-        in_index = [0] * in_ndims
-
-        shape_broadcast(in_shape, out_shape)
+        out_index = [0] * len(out_shape)
+        in_index = [0] * len(in_shape)
+        assert shape_broadcast(in_shape, out_shape)
         for out_pos in range(out_size):
             to_index(out_pos, out_shape, out_index, out_strides)
             broadcast_index(out_index, out_shape, in_shape, in_index)
-
-            in_pos = index_to_position(in_index, in_strides)
-            out[out_pos] = fn(in_storage[in_pos])
+            out[out_pos] = fn(in_storage[index_to_position(in_index, in_strides)])
 
     return _map
 
@@ -327,29 +320,17 @@ def tensor_zip(
     ) -> None:
         # Implement for Task 2.3.
         out_size = operators.prod(out_shape)
-        out_ndims = len(out_shape)
-        out_index = [0] * out_ndims
-
-        a_size = operators.prod(a_shape)
-        a_ndims = len(a_shape)
-        a_index = [0] * a_ndims
-
-        b_size = operators.prod(b_shape)
-        b_ndims = len(b_shape)
-        b_index = [0] * b_ndims
-
-        a_broadcast_shape = shape_broadcast(out_shape, a_shape)
-        b_broadcast_shape = shape_broadcast(out_shape, b_shape)
+        out_index = [0] * len(out_shape)
+        a_index = [0] * len(a_shape)
+        b_index = [0] * len(b_shape)
+        assert shape_broadcast(out_shape, a_shape)
+        assert shape_broadcast(out_shape, b_shape)
         for out_pos in range(out_size):
             to_index(out_pos, out_shape, out_index, out_strides)
-
             broadcast_index(out_index, out_shape, a_shape, a_index)
-            a_pos = index_to_position(a_index, a_strides)
-
             broadcast_index(out_index, out_shape, b_shape, b_index)            
-            b_pos = index_to_position(b_index, b_strides)
-
-            out[out_pos] = fn(a_storage[a_pos], b_storage[b_pos])        
+            out[out_pos] = fn(a_storage[index_to_position(a_index, a_strides)], 
+                              b_storage[index_to_position(b_index, b_strides)])        
 
     return _zip
 
@@ -383,22 +364,14 @@ def tensor_reduce(
     ) -> None:
         # Implement for Task 2.3.
         out_size = operators.prod(out_shape)
-        out_ndims = len(out_shape)
-        out_index = [0] * out_ndims
-
-        a_size = operators.prod(a_shape)
-        a_ndims = len(a_shape)
-        a_index = [0] * a_ndims
-        
-        broadcast_shape = shape_broadcast(out_shape, a_shape)
+        a_index = [0] * len(a_shape)      
+        assert shape_broadcast(out_shape, a_shape)
         for out_pos in range(out_size):
-            to_index(out_pos, out_shape, out_index, out_strides)
-            a_index = out_index # Start from 0 in the reduce dim, this is the same index in both tensors
-            a_pos = index_to_position(a_index, a_strides)
+            to_index(out_pos, out_shape, a_index, out_strides)
+            a_start = index_to_position(a_index, a_strides)
             acc = start
-            for _ in range(a_shape[reduce_dim]):
+            for a_pos in range(a_start, a_start + a_shape[reduce_dim] * a_strides[reduce_dim], a_strides[reduce_dim]):
                 acc = fn(a_storage[a_pos], acc)
-                a_pos += a_strides[reduce_dim] # Don't use index_to_position again, just move by stride
             out[out_pos] = acc
 
     return _reduce
